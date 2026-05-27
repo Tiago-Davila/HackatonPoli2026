@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politón 2026 — Transición</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; overflow:hidden; background:transparent; }
+
+  .panel-left, .panel-right {
+    position:absolute; top:0; bottom:0; width:50%; background:#0D1828; will-change:transform;
+  }
+  .panel-left  { left:0;  border-right:3px solid #C4A055;
+    animation: inL .5s cubic-bezier(.76,0,.24,1) 0s    forwards,
+               outL .45s cubic-bezier(.76,0,.24,1) 1.35s forwards,
+               bHL .1s linear .54s forwards, bSL .1s linear 1.3s forwards;
+    transform:translateX(-100%); }
+  .panel-right { right:0; border-left:3px solid #C4A055;
+    animation: inR .5s cubic-bezier(.76,0,.24,1) .04s  forwards,
+               outR .45s cubic-bezier(.76,0,.24,1) 1.3s  forwards,
+               bHR .1s linear .54s forwards, bSR .1s linear 1.3s forwards;
+    transform:translateX(100%); }
+
+  @keyframes bHL { to { border-right-color:transparent; } }
+  @keyframes bSL { to { border-right-color:#C4A055; } }
+  @keyframes bHR { to { border-left-color:transparent; } }
+  @keyframes bSR { to { border-left-color:#C4A055; } }
+  @keyframes inL  { to { transform:translateX(0); } }
+  @keyframes inR  { to { transform:translateX(0); } }
+  @keyframes outL { to { transform:translateX(-100%); } }
+  @keyframes outR { to { transform:translateX(100%);  } }
+
+  .panel-left::after, .panel-right::after {
+    content:''; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg,transparent 0px,transparent 59px,rgba(196,160,85,.04) 59px,rgba(196,160,85,.04) 60px);
+  }
+
+  /* Logo centrado */
+  .center-logo {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    opacity:0;
+    /* mix-blend-mode en el contenedor para que el negro del logo desaparezca contra los panels */
+    mix-blend-mode: screen;
+    animation: lgIn .4s cubic-bezier(.34,1.4,.64,1) .52s forwards,
+               lgOut .3s ease 1.1s forwards;
+  }
+  .center-logo img {
+    height:280px; width:auto;
+    filter: drop-shadow(0 4px 30px rgba(0,0,0,.5));
+  }
+
+  .logo-rule {
+    display:flex; align-items:center; justify-content:center; gap:16px; margin:10px 0 8px;
+  }
+  .rule-line { width:120px; height:1.5px; background:#C4A055; opacity:.6; }
+  .rule-dot  { width:6px; height:6px; border-radius:50%; background:#C4A055; }
+
+  .logo-sub {
+    font-family:'Libre Baskerville',serif; font-size:14px;
+    color:#B8A88A; letter-spacing:.35em; text-transform:uppercase;
+  }
+
+  @keyframes lgIn  { from{opacity:0;transform:translate(-50%,-50%) scale(.88)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+  @keyframes lgOut { to{opacity:0;transform:translate(-50%,-50%) scale(1.04)} }
+
+  /* Próxima sección */
+  .next-wrap {
+    position:absolute; bottom:200px; left:0; right:0;
+    text-align:center; z-index:20; opacity:0;
+    animation: lgIn .4s ease .65s forwards, lgOut .3s ease 1.1s forwards;
+  }
+  .next-label { font-family:'Libre Baskerville',serif; font-size:11px; color:#B8A88A; letter-spacing:.35em; text-transform:uppercase; margin-bottom:6px; }
+  .next-name  { font-family:'Libre Baskerville',serif; font-size:28px; font-weight:700; color:#E8DCC8; letter-spacing:.06em; }
+</style>
+</head>
+<body>
+
+<div class="panel-left"></div>
+<div class="panel-right"></div>
+
+<div class="center-logo">
+  <img src="LogoCompleto.png" alt="Logo de Politón 2026" style="width: auto; height: 400px;">
+  <div class="logo-rule">
+    <div class="rule-line"></div><div class="rule-dot"></div><div class="rule-line"></div>
+  </div>
+  <div class="logo-sub">Instituto Politécnico Modelo</div>
+</div>
+
+<div class="next-wrap" id="next-wrap" style="display:none">
+  <div class="next-label">A continuación</div>
+  <div class="next-name" id="next-name"></div>
+</div>
+
+<script>
+const p=new URLSearchParams(location.search);
+const next=p.get('next');
+if(next){ document.getElementById('next-name').textContent=next; document.getElementById('next-wrap').style.display='block'; }
+if(p.get('loop')){ document.addEventListener('animationend',e=>{ if(e.animationName==='outL') setTimeout(()=>location.reload(),600); }); }
+</script>
+</body>
+</html>

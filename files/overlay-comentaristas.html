@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politón — Overlay Comentaristas</title>
+<!--
+  OVERLAY COMENTARISTAS
+  Fuente de navegador OBS — 1920 × 1080 px, fondo transparente.
+  Muestra la franja inferior de celdas para los comentaristas con fondo oscuro semitransparente.
+  El área superior es completamente transparente para que el video principal quede visible debajo.
+
+  Configuración OBS recomendada:
+    Ancho  : 1920 px   Alto : 1080 px
+    ✓ Permitir transparencia
+
+  Parámetros URL opcionales:
+    ?n=1|2|3|4   — número de celdas de comentaristas (predeterminado: 4)
+
+  Orden de capas típico en OBS (de arriba ↓ a abajo):
+    1. overlay-comentaristas.html   ← este archivo (bordes + moscas)
+    2. Fuentes de cámara comentaristas (webcam/NDI por celda)
+    3. Fuente de vídeo principal
+    4. camara-grande.html           ← fondo de diseño general
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    width:1920px; height:1080px;
+    overflow:hidden; background:transparent;
+  }
+
+  /* Línea separadora debajo del área principal */
+  .cam-sep {
+    position:absolute; top:610px; left:0; right:0; height:4px;
+    background:rgba(13,24,40,.95);
+    border-top:2px solid #C4A055;
+  }
+
+  /* Fondo oscuro detrás de las celdas de comentaristas */
+  .cond-bg {
+    position:absolute; top:614px; left:0; right:0; bottom:0;
+    background:rgba(6,14,28,.95);
+  }
+
+  /* Fila de comentaristas */
+  .conductor-area {
+    position:absolute; top:614px; left:0; right:0; bottom:10px;
+    display:flex; gap:12px; padding:12px;
+  }
+
+  /* Celda individual — fondo transparente para que la cámara OBS se vea debajo */
+  .cam-cell {
+    position:relative; flex:1; min-width:0;
+    background:transparent; overflow:hidden;
+    outline:1.5px solid rgba(196,160,85,.45); outline-offset:-1px;
+  }
+  .cam-cell::before, .cam-cell::after {
+    content:''; position:absolute; width:14px; height:14px; z-index:5; pointer-events:none;
+  }
+  .cam-cell::before {
+    top:6px; left:6px;
+    border-top:2px solid #C4A055; border-left:2px solid #C4A055; opacity:.7;
+  }
+  .cam-cell::after {
+    bottom:6px; right:6px;
+    border-bottom:2px solid #C4A055; border-right:2px solid #C4A055; opacity:.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="cond-bg"></div>
+<div class="cam-sep"></div>
+
+<div class="conductor-area" id="conductors">
+  <div class="cam-cell" id="c1"></div>
+  <div class="cam-cell" id="c2"></div>
+  <div class="cam-cell" id="c3"></div>
+  <div class="cam-cell" id="c4"></div>
+</div>
+
+<script>
+const p = new URLSearchParams(location.search);
+// Número de celdas visibles: ?n=1, ?n=2, ?n=3 o ?n=4 (default)
+const n = Math.min(4, Math.max(1, parseInt(p.get('n') || '4', 10)));
+for (let i = n + 1; i <= 4; i++) {
+  const el = document.getElementById('c' + i);
+  if (el) el.style.display = 'none';
+}
+</script>
+
+</body>
+</html>

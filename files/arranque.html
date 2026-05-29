@@ -125,6 +125,43 @@
   .bt { font-family:'Libre Baskerville',serif; font-size:12px; letter-spacing:.22em; color:#B8A88A; text-transform:uppercase; }
   .bt strong { color:#C4A055; }
   .bsep { width:4px; height:4px; border-radius:50%; background:#C4A055; opacity:.5; }
+
+  /* "Ya comenzamos" stamp */
+  .stamp {
+    position:absolute; top:230px; right:468px;
+    transform:rotate(14deg);
+    opacity:0; transform-origin:center center;
+    animation:stampIn .4s cubic-bezier(.34,1.65,.64,1) 2.75s forwards;
+    z-index:20; pointer-events:none;
+  }
+  @keyframes stampIn {
+    0%   { opacity:0; transform:rotate(14deg) scale(.08) translateY(-12px); }
+    65%  { opacity:1; transform:rotate(14deg) scale(1.1); }
+    100% { opacity:1; transform:rotate(14deg) scale(1); }
+  }
+  .stamp-box {
+    background:rgba(7,14,28,.94); border:2.5px solid #C4A055; border-radius:5px;
+    padding:8px 18px 10px; position:relative; text-align:center; min-width:150px;
+    box-shadow:0 0 16px rgba(196,160,85,.45), inset 0 0 8px rgba(196,160,85,.08);
+  }
+  .stamp-box::after {
+    content:''; position:absolute; inset:5px;
+    border:1.5px dashed rgba(196,160,85,.55); border-radius:3px; pointer-events:none;
+  }
+  .stamp-eyebrow {
+    font-family:'Libre Baskerville',serif; font-size:10px; font-weight:700;
+    color:#C4A055; letter-spacing:.45em; text-transform:uppercase; margin-bottom:5px;
+  }
+  .stamp-text {
+    font-family:'Playfair Display',serif; font-size:30px; font-weight:900;
+    color:#E8DCC8; line-height:1; text-transform:uppercase; letter-spacing:.02em;
+    text-shadow:0 0 10px rgba(196,160,85,.45);
+  }
+  .stamp-rule { width:55%; height:2px; background:linear-gradient(to right,transparent,#C4A055,transparent); margin:6px auto 4px; }
+  .stamp-foot {
+    font-family:'Libre Baskerville',serif; font-size:8px; font-weight:700;
+    color:rgba(196,160,85,.7); letter-spacing:.45em; text-transform:uppercase;
+  }
 </style>
 </head>
 <body>
@@ -150,6 +187,15 @@
   </div>
   <div class="institution">Instituto Politécnico Modelo · Hackathon</div>
   <div class="date-line">24 · 25 · 26 de Junio de 2026</div>
+</div>
+
+<div class="stamp">
+  <div class="stamp-box">
+    <div class="stamp-eyebrow">★ Politón ★</div>
+    <div class="stamp-text">¡Ya<br>comenzamos!</div>
+    <div class="stamp-rule"></div>
+    <div class="stamp-foot">en vivo · ahora</div>
+  </div>
 </div>
 
 <div class="bottom-bar">

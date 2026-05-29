@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politón — Countdown Overlay</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  /* Widget size — designed to be used as a small OBS browser source */
+  body {
+    width:320px; height:180px;
+    overflow:hidden; background:transparent;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .widget {
+    position:relative; width:100%; height:100%;
+    background:linear-gradient(145deg, #0a1525 0%, #060e1c 60%, #0c1a2e 100%);
+    border:1px solid rgba(196,160,85,.45);
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  /* Subtle grid lines */
+  .widget::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(90deg,transparent 0,transparent 39px,rgba(196,160,85,.04) 39px,rgba(196,160,85,.04) 40px),
+      repeating-linear-gradient(0deg,transparent 0,transparent 39px,rgba(196,160,85,.04) 39px,rgba(196,160,85,.04) 40px);
+    pointer-events:none;
+  }
+
+  /* Animated gold glow in background */
+  .widget::after {
+    content:'';
+    position:absolute; top:-40%; left:-20%; width:140%; height:140%;
+    background:radial-gradient(ellipse 60% 50% at 50% 60%, rgba(196,160,85,.12) 0%, transparent 70%);
+    animation:pulse 5s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes pulse { 0%{opacity:.4;transform:scale(.85)} 100%{opacity:1;transform:scale(1.1)} }
+
+  /* Corner bracket decorations */
+  .corner { position:absolute; width:14px; height:14px; z-index:5; }
+  .corner.tl { top:6px; left:6px;  border-top:1.5px solid #C4A055; border-left:1.5px solid #C4A055; }
+  .corner.tr { top:6px; right:6px; border-top:1.5px solid #C4A055; border-right:1.5px solid #C4A055; }
+  .corner.bl { bottom:6px; left:6px;  border-bottom:1.5px solid #C4A055; border-left:1.5px solid #C4A055; }
+  .corner.br { bottom:6px; right:6px; border-bottom:1.5px solid #C4A055; border-right:1.5px solid #C4A055; }
+
+  /* Header label */
+  .label {
+    position:absolute; top:12px; left:0; right:0; z-index:6;
+    text-align:center;
+    font-family:'Libre Baskerville',serif; font-size:9px;
+    color:rgba(196,160,85,.7); letter-spacing:.35em; text-transform:uppercase;
+  }
+  .label-dot {
+    display:inline-block; width:4px; height:4px; border-radius:50%;
+    background:#C4A055; opacity:.7; vertical-align:middle; margin:0 6px;
+  }
+
+  /* Separator line */
+  .sep {
+    position:absolute; top:30px; left:20px; right:20px; height:1px;
+    background:linear-gradient(to right, transparent, rgba(196,160,85,.4), transparent);
+    z-index:6;
+  }
+
+  /* Timer display area */
+  .timer-area {
+    position:absolute; top:35px; left:0; right:0; bottom:12px;
+    display:flex; align-items:center; justify-content:center; z-index:6;
+    gap:4px;
+  }
+
+  .time-block {
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+  }
+
+  .time-value {
+    font-family:'Playfair Display',serif; font-size:44px; font-weight:900;
+    color:#E8DCC8; line-height:1;
+    text-shadow:0 0 20px rgba(196,160,85,.5), 0 2px 8px rgba(0,0,0,.9);
+  }
+  .time-value.highlight { color:#C4A055; }
+
+  .time-label {
+    font-family:'Libre Baskerville',serif; font-size:7px;
+    color:rgba(184,168,138,.6); letter-spacing:.25em; text-transform:uppercase;
+  }
+
+  .time-colon {
+    font-family:'Playfair Display',serif; font-size:40px; font-weight:900;
+    color:rgba(196,160,85,.6); line-height:1; padding-bottom:6px;
+    animation:colonBlink 1s step-end infinite;
+  }
+  @keyframes colonBlink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  /* Finished state — digits turn red */
+  .widget.finished .time-value { color:#e03030; }
+</style>
+</head>
+<body>
+<div class="widget" id="widget">
+  <!-- Decorative corners -->
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <!-- Header label -->
+  <div class="label">
+    <span class="label-dot"></span>Cuenta Regresiva<span class="label-dot"></span>
+  </div>
+  <div class="sep"></div>
+
+  <!-- Timer display -->
+  <div class="timer-area">
+    <div class="time-block">
+      <div class="time-value" id="disp-h">00</div>
+      <div class="time-label">hs</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-value" id="disp-m">00</div>
+      <div class="time-label">min</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-value highlight" id="disp-s">00</div>
+      <div class="time-label">seg</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Configuration via URL params ───────────────────────────────────────────
+// ?t=HH:MM:SS  or  ?t=MM:SS  — set duration
+// ?autostart    — start immediately on load
+// ?loop         — restart when finished
+// Example: overlay-countdown.html?t=01:30:00&autostart
+const p = new URLSearchParams(location.search);
+
+function parseDuration(str) {
+  if (!str) return 0;
+  const parts = str.split(':').map(Number);
+  if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+  if (parts.length === 2) return parts[0]*60 + parts[1];
+  return parseInt(str) || 0;
+}
+
+let totalSeconds = parseDuration(p.get('t')) || 0;
+let remaining = totalSeconds;
+let timerID = null;
+let running = false;
+
+const widget    = document.getElementById('widget');
+const dispH     = document.getElementById('disp-h');
+const dispM     = document.getElementById('disp-m');
+const dispS     = document.getElementById('disp-s');
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function render(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  dispH.textContent = pad(h);
+  dispM.textContent = pad(m);
+  dispS.textContent = pad(s);
+}
+
+function tick() {
+  if (remaining <= 0) {
+    render(0);
+    running = false;
+    clearInterval(timerID);
+    widget.classList.remove('running');
+    widget.classList.add('finished');
+    if (p.has('loop')) setTimeout(() => { widget.classList.remove('finished'); startTimer(); }, 2000);
+    return;
+  }
+  remaining--;
+  render(remaining);
+}
+
+function startTimer() {
+  if (running) return;
+  if (remaining <= 0) remaining = totalSeconds;
+  running = true;
+  widget.classList.add('running');
+  widget.classList.remove('finished');
+  render(remaining);
+  timerID = setInterval(tick, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerID);
+  running = false;
+  widget.classList.remove('running');
+}
+
+function resetTimer() {
+  stopTimer();
+  remaining = totalSeconds;
+  render(remaining);
+  widget.classList.remove('finished');
+}
+
+// Initial render
+render(remaining);
+
+// Autostart
+if (p.has('autostart') && totalSeconds > 0) startTimer();
+
+// Keyboard controls (when focused in OBS interact mode)
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { running ? stopTimer() : startTimer(); }
+  if (e.code === 'KeyR')  { resetTimer(); }
+});
+</script>
+</body>
+</html>

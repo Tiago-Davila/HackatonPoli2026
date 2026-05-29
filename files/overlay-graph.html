@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politón — Lower Third Background</title>
+<!--
+  LOWER THIRD OVERLAY (Zócalo / Banda de título)
+  Diseñado como fuente de navegador en OBS, como fondo del titular.
+
+  Configuración OBS recomendada:
+    Ancho:  1920 px
+    Alto:   160 px  (ajustable)
+  Luego agregar fuentes de texto (OBS Text GDI+) encima de esta capa.
+
+  Parámetros URL opcionales:
+    ?accent=C4A055   Color del bar izquierdo (hex sin #)
+    ?h=160           Alto del widget en px
+    ?anim=0          Desactiva animación de fondo
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    width:1920px; height:160px;
+    overflow:hidden; background:transparent;
+  }
+
+  .lower-third {
+    position:relative; width:80%; height:100%;
+    margin:0 auto;
+    overflow:hidden;
+    border:2px solid rgba(196,160,85,.7);
+    animation:borderPulse 3.5s ease-in-out infinite;
+  }
+  @keyframes borderPulse {
+    0%,100% { border-color:rgba(196,160,85,.4); box-shadow:0 0 8px rgba(196,160,85,.3),  inset 0 0 6px rgba(196,160,85,.08); }
+    50%      { border-color:rgba(196,160,85,.95); box-shadow:0 0 22px rgba(196,160,85,.65), inset 0 0 14px rgba(196,160,85,.2); }
+  }
+
+  /* Main background */
+  .bg {
+    position:absolute; inset:0;
+    background:
+      linear-gradient(90deg,
+        #0a1525 0%,
+        #0c1e36 18%,
+        #060e1c 55%,
+        #080f1e 100%
+      );
+  }
+
+  /* Subtle vertical grid lines */
+  .bg::before {
+    content:''; position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(90deg,
+        transparent 0,transparent 59px,
+        rgba(196,160,85,.035) 59px,rgba(196,160,85,.035) 60px
+      );
+    pointer-events:none;
+  }
+
+  /* Animated gold shimmer */
+  .shimmer {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 40% 200% at 12% 50%, rgba(196,160,85,.13) 0%, transparent 70%),
+      radial-gradient(ellipse 30% 200% at 90% 50%, rgba(196,160,85,.06) 0%, transparent 70%);
+    animation:shimmer 7s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes shimmer {
+    0%   { opacity:.5; transform:scaleX(.9) translateX(-2%); }
+    100% { opacity:1;  transform:scaleX(1)  translateX(2%);  }
+  }
+
+  /* Left accent bar */
+  .accent-bar {
+    position:absolute; left:0; top:0; bottom:0;
+    width:6px;
+    background:linear-gradient(to bottom, #C4A055, rgba(196,160,85,.3) 100%);
+  }
+
+  /* Top border line */
+  .border-top {
+    position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(to right, #C4A055, rgba(196,160,85,.15) 60%, transparent 100%);
+  }
+
+  /* Bottom border line */
+  .border-bottom {
+    position:absolute; bottom:0; left:0; right:0; height:1px;
+    background:linear-gradient(to right, rgba(196,160,85,.6), rgba(196,160,85,.08) 50%, transparent 100%);
+  }
+
+  /* Right fade-out */
+  .fade-right {
+    position:absolute; top:0; right:0; bottom:0; width:200px;
+    background:linear-gradient(to right, transparent, rgba(6,14,28,.85));
+    pointer-events:none;
+  }
+
+  /* Center horizontal divider line */
+  .inner-line {
+    position:absolute; top:50%; left:6px; right:0; height:1px;
+    transform:translateY(-50%);
+    background:linear-gradient(to right, rgba(196,160,85,.2), rgba(196,160,85,.03) 40%, transparent 100%);
+    pointer-events:none;
+  }
+
+  /* Corner bracket (top-left) */
+  .tag-mark {
+    position:absolute; top:0; left:6px;
+    width:38px; height:38px;
+    border-top:2px solid rgba(196,160,85,.5);
+    border-left:2px solid rgba(196,160,85,.5);
+  }
+  /* Corner bracket (bottom-right) */
+  .tag-mark-br {
+    position:absolute; bottom:0; right:0;
+    width:38px; height:38px;
+    border-bottom:2px solid rgba(196,160,85,.15);
+    border-right:2px solid rgba(196,160,85,.15);
+  }
+
+  /* Dot accent near left */
+  .dot {
+    position:absolute; left:18px; top:50%;
+    transform:translateY(-50%);
+    width:5px; height:5px; border-radius:50%;
+    background:#C4A055; opacity:.7;
+  }
+</style>
+</head>
+<body>
+<div class="lower-third" id="lower-third">
+  <div class="bg"></div>
+  <div class="shimmer"></div>
+  <div class="accent-bar" id="accent-bar"></div>
+  <div class="border-top"></div>
+  <div class="border-bottom"></div>
+  <div class="inner-line"></div>
+  <div class="fade-right"></div>
+  <div class="tag-mark"></div>
+  <div class="tag-mark-br"></div>
+  <div class="dot"></div>
+</div>
+
+<script>
+const p = new URLSearchParams(location.search);
+
+// Custom accent color
+const accent = '#' + (p.get('accent') || 'C4A055');
+const bar = document.getElementById('accent-bar');
+if (bar) bar.style.background = `linear-gradient(to bottom, ${accent}, ${accent}4d)`;
+
+// Custom height
+const h = parseInt(p.get('h'));
+if (h > 0) {
+  document.body.style.height = h + 'px';
+  document.getElementById('lower-third').style.height = h + 'px';
+}
+
+// Disable animation
+if (p.get('anim') === '0') {
+  document.querySelector('.shimmer').style.animation = 'none';
+  document.getElementById('lower-third').style.animation = 'none';
+}
+</script>
+</body>
+</html>

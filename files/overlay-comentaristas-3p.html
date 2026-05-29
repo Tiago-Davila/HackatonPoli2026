@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Politón — Overlay Comentaristas (3 cámaras)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; overflow:hidden; background:transparent; }
+
+  .cam-sep {
+    position:absolute; top:610px; left:0; right:0; height:4px;
+    background:rgba(13,24,40,.95); border-top:2px solid #C4A055;
+  }
+  .cond-bg {
+    position:absolute; top:614px; left:0; right:0; bottom:0;
+    background:rgba(6,14,28,.95);
+  }
+  .conductor-area {
+    position:absolute; top:614px; left:0; right:0; bottom:10px;
+    display:flex; gap:12px; padding:12px; justify-content:center;
+  }
+  .cam-cell {
+    position:relative; flex:0.25; min-width:0;
+    background:transparent; overflow:hidden;
+    outline:1.5px solid rgba(196,160,85,.45); outline-offset:-1px;
+  }
+  .cam-cell::before, .cam-cell::after {
+    content:''; position:absolute; width:14px; height:14px; z-index:5; pointer-events:none;
+  }
+  .cam-cell::before { top:6px; left:6px; border-top:2px solid #C4A055; border-left:2px solid #C4A055; opacity:.7; }
+  .cam-cell::after  { bottom:6px; right:6px; border-bottom:2px solid #C4A055; border-right:2px solid #C4A055; opacity:.7; }
+</style>
+</head>
+<body>
+<div class="cond-bg"></div>
+<div class="cam-sep"></div>
+<div class="conductor-area">
+  <div class="cam-cell"></div>
+  <div class="cam-cell"></div>
+  <div class="cam-cell"></div>
+</div>
+</body>
+</html>

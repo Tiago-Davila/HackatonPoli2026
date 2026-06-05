@@ -8,7 +8,7 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   /* Widget size — designed to be used as a small OBS browser source */
   body {
-    width:320px; height:180px;
+    width:320px; height:240px;
     overflow:hidden; background:transparent;
     display:flex; align-items:center; justify-content:center;
   }
@@ -99,6 +99,37 @@
 
   /* Finished state — digits turn red */
   .widget.finished .time-value { color:#e03030; }
+
+  /* ── Control panel ── */
+  .controls {
+    position:absolute; bottom:0; left:0; right:0;
+    height:56px;
+    background:rgba(6,14,28,.92);
+    border-top:1px solid rgba(196,160,85,.25);
+    display:flex; align-items:center; justify-content:center;
+    gap:6px; padding:0 10px; z-index:10;
+  }
+
+  .ctrl-input {
+    flex:1; min-width:0;
+    background:#0a1525; border:1px solid rgba(196,160,85,.4); border-radius:3px;
+    color:#E8DCC8; font-family:'Libre Baskerville',serif; font-size:13px;
+    text-align:center; padding:5px 4px; outline:none;
+    letter-spacing:.05em;
+  }
+  .ctrl-input:focus { border-color:#C4A055; box-shadow:0 0 6px rgba(196,160,85,.3); }
+  .ctrl-input::placeholder { color:rgba(184,168,138,.35); font-size:11px; }
+
+  .ctrl-btn {
+    width:36px; height:32px;
+    background:rgba(196,160,85,.12); border:1px solid rgba(196,160,85,.4); border-radius:3px;
+    color:#C4A055; font-size:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  .ctrl-btn:hover  { background:rgba(196,160,85,.28); }
+  .ctrl-btn:active { background:rgba(196,160,85,.45); }
+  .ctrl-btn.wide { width:52px; }
 </style>
 </head>
 <body>
@@ -131,6 +162,14 @@
       <div class="time-value highlight" id="disp-s">00</div>
       <div class="time-label">seg</div>
     </div>
+  </div>
+
+  <!-- Control panel (visible in OBS Interact mode) -->
+  <div class="controls">
+    <input class="ctrl-input" id="ctrl-input" type="text" placeholder="MM:SS ó HH:MM:SS" spellcheck="false">
+    <button class="ctrl-btn wide" id="btn-set"   title="Setear tiempo">SET</button>
+    <button class="ctrl-btn"      id="btn-play"  title="Play / Pause">▶</button>
+    <button class="ctrl-btn"      id="btn-reset" title="Reset">&#8635;</button>
   </div>
 
 </div>
@@ -215,10 +254,55 @@ render(remaining);
 // Autostart
 if (p.has('autostart') && totalSeconds > 0) startTimer();
 
+// ─── Control panel wiring ────────────────────────────────────────────────────
+const ctrlInput = document.getElementById('ctrl-input');
+const btnPlay   = document.getElementById('btn-play');
+const btnReset  = document.getElementById('btn-reset');
+const btnSet    = document.getElementById('btn-set');
+
+// Pre-fill input with URL time if provided
+if (p.get('t')) ctrlInput.value = p.get('t');
+
+function applyInput() {
+  const secs = parseDuration(ctrlInput.value.trim());
+  if (secs > 0) {
+    stopTimer();
+    totalSeconds = secs;
+    remaining    = secs;
+    render(remaining);
+    widget.classList.remove('finished');
+  }
+}
+
+function updatePlayBtn() {
+  btnPlay.textContent = running ? '\u23F8' : '\u25B6';
+}
+
+btnSet.addEventListener('click', () => { applyInput(); updatePlayBtn(); });
+
+btnPlay.addEventListener('click', () => {
+  if (totalSeconds === 0) applyInput();
+  running ? stopTimer() : startTimer();
+  updatePlayBtn();
+});
+
+btnReset.addEventListener('click', () => {
+  resetTimer();
+  updatePlayBtn();
+});
+
+// Allow pressing Enter in the input to set the time
+ctrlInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { applyInput(); updatePlayBtn(); e.preventDefault(); }
+});
+
+updatePlayBtn();
+
 // Keyboard controls (when focused in OBS interact mode)
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { running ? stopTimer() : startTimer(); }
-  if (e.code === 'KeyR')  { resetTimer(); }
+  if (document.activeElement === ctrlInput) return; // don't hijack typing
+  if (e.code === 'Space') { running ? stopTimer() : startTimer(); updatePlayBtn(); }
+  if (e.code === 'KeyR')  { resetTimer(); updatePlayBtn(); }
 });
 </script>
 </body>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+<title>Politon - Rosco Display</title>
+<!--
+  ROSCO DISPLAY
+  Fuente de navegador OBS, 1920 x 1080, fondo transparente.
+  Este archivo muestra solamente el rosco para ponerlo sobre la camara.
+
+  Parametros utiles:
+    ?x=960       centro horizontal del rosco
+    ?y=520       centro vertical del rosco
+    ?size=650    diametro total aproximado
+    ?chip=56     diametro de cada letra
+    ?glow=1      brillo detras de cada bolita
+
+  Ejemplo:
+    overlay-rosco-display.html?x=960&y=500&size=640&chip=54
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1920px; height:1080px;
+    overflow:hidden;
+    background:transparent;
+  }
+  :root {
+    --size:650px;
+    --chip:56px;
+    --radius:292px;
+    --x:960px;
+    --y:520px;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --pending:#071223;
+    --ink:#E8DCC8;
+    --correct:#2EBC6F;
+    --wrong:#e14646;
+    --passed:#f2c94c;
+  }
+  .rosco {
+    position:absolute;
+    left:var(--x); top:var(--y);
+    width:var(--size); height:var(--size);
+    margin-left:calc(var(--size) / -2);
+    margin-top:calc(var(--size) / -2);
+    pointer-events:none;
+  }
+  .rosco::before {
+    content:'';
+    position:absolute;
+    inset:calc(var(--chip) * .82);
+    border-radius:50%;
+    border:2px solid rgba(196,160,85,.32);
+    box-shadow:
+      0 0 38px rgba(196,160,85,.28),
+      inset 0 0 34px rgba(196,160,85,.12);
+  }
+  .rosco::after {
+    content:'';
+    position:absolute;
+    inset:calc(var(--chip) * 1.65);
+    border-radius:50%;
+    border:1px solid rgba(232,220,200,.14);
+    box-shadow:inset 0 0 60px rgba(6,14,28,.2);
+  }
+  .corner {
+    position:absolute;
+    width:calc(var(--chip) * .72);
+    height:calc(var(--chip) * .72);
+    border-color:rgba(196,160,85,.78);
+    border-style:solid;
+    opacity:.9;
+    filter:drop-shadow(0 0 10px rgba(196,160,85,.34));
+  }
+  .corner.tl {
+    left:calc(var(--chip) * .55);
+    top:calc(var(--chip) * .55);
+    border-width:2px 0 0 2px;
+  }
+  .corner.tr {
+    right:calc(var(--chip) * .55);
+    top:calc(var(--chip) * .55);
+    border-width:2px 2px 0 0;
+  }
+  .corner.bl {
+    left:calc(var(--chip) * .55);
+    bottom:calc(var(--chip) * .55);
+    border-width:0 0 2px 2px;
+  }
+  .corner.br {
+    right:calc(var(--chip) * .55);
+    bottom:calc(var(--chip) * .55);
+    border-width:0 2px 2px 0;
+  }
+  .dial-mark {
+    position:absolute;
+    left:50%; top:50%;
+    width:6px; height:6px;
+    margin:-3px 0 0 -3px;
+    border-radius:50%;
+    background:var(--gold);
+    opacity:.72;
+    box-shadow:0 0 10px rgba(196,160,85,.5);
+    transform:rotate(var(--a)) translate(calc(var(--radius) - var(--chip) * .82));
+  }
+  .letter {
+    position:absolute; left:50%; top:50%;
+    width:var(--chip); height:var(--chip);
+    margin-left:calc(var(--chip) / -2);
+    margin-top:calc(var(--chip) / -2);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 35% 25%, rgba(232,220,200,.18), transparent 32%),
+      linear-gradient(145deg, #0d1f36 0%, var(--pending) 70%);
+    border:2px solid rgba(196,160,85,.72);
+    color:var(--ink);
+    font-family:'Playfair Display', Georgia, serif;
+    font-size:calc(var(--chip) * .42);
+    font-weight:900;
+    line-height:1;
+    box-shadow:
+      0 0 12px rgba(196,160,85,.35),
+      0 4px 12px rgba(0,0,0,.48),
+      inset 0 0 12px rgba(196,160,85,.1),
+      inset 0 -3px 0 rgba(0,0,0,.22);
+    text-shadow:0 2px 6px rgba(0,0,0,.82);
+    transform:rotate(var(--a)) translate(var(--radius)) rotate(calc(-1 * var(--a)));
+    transition:background .18s, border-color .18s, color .18s, box-shadow .18s, transform .18s;
+  }
+  body.glow .letter {
+    box-shadow:
+      0 0 18px rgba(196,160,85,.46),
+      0 4px 12px rgba(0,0,0,.48),
+      inset 0 0 12px rgba(196,160,85,.1),
+      inset 0 -3px 0 rgba(0,0,0,.22);
+  }
+  .letter.active {
+    border-color:var(--cream);
+    color:#fff7df;
+    box-shadow:
+      0 0 26px rgba(232,220,200,.78),
+      0 0 42px rgba(196,160,85,.38),
+      0 4px 12px rgba(0,0,0,.5),
+      inset 0 0 0 2px rgba(232,220,200,.18);
+    transform:rotate(var(--a)) translate(var(--radius)) rotate(calc(-1 * var(--a))) scale(1.08);
+  }
+  .letter.correct {
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.22), transparent 34%),
+      linear-gradient(145deg, #208854 0%, var(--correct) 100%);
+    border-color:#61f08b;
+    color:#f5fff9;
+    text-shadow:0 2px 5px rgba(0,0,0,.45);
+  }
+  .letter.wrong {
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.2), transparent 34%),
+      linear-gradient(145deg, #8d2227 0%, var(--wrong) 100%);
+    border-color:#ff9a9a;
+    color:#fff7f7;
+  }
+  .letter.passed {
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.26), transparent 34%),
+      linear-gradient(145deg, #b8841e 0%, var(--passed) 100%);
+    border-color:#ffe695;
+    color:#171206;
+    text-shadow:0 1px 3px rgba(255,255,255,.26);
+  }
+</style>
+</head>
+<body>
+<div class="rosco" id="rosco" aria-label="Rosco">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+</div>
+
+<script>
+const p = new URLSearchParams(location.search);
+const ALPHABET = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','\u00D1','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const STORAGE_KEY = 'politon-rosco-live-state-v2';
+const CHANNEL_NAME = 'politon-rosco-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const root = document.documentElement;
+const size = Number(p.get('size')) || 650;
+const chip = Number(p.get('chip')) || 56;
+root.style.setProperty('--size', `${size}px`);
+root.style.setProperty('--chip', `${chip}px`);
+root.style.setProperty('--radius', `${(size - chip) / 2}px`);
+root.style.setProperty('--x', `${Number(p.get('x')) || 960}px`);
+root.style.setProperty('--y', `${Number(p.get('y')) || 520}px`);
+if (p.get('glow') !== '0') document.body.classList.add('glow');
+
+const defaultState = () => ({
+  version: Date.now(),
+  current: 0,
+  statuses: Object.fromEntries(ALPHABET.map(letter => [letter, 'pending'])),
+  questions: ALPHABET.map(letter => ({
+    letter,
+    mode: `Empieza con ${letter}`,
+    answer: '',
+    question: `Pregunta para la letra ${letter}.`
+  }))
+});
+
+let state = defaultState();
+let lastVersion = 0;
+
+function readState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (saved && saved.statuses) state = { ...defaultState(), ...saved };
+  } catch (err) {
+    console.warn('No se pudo leer el estado del rosco:', err);
+  }
+}
+
+function buildRosco() {
+  const step = 360 / ALPHABET.length;
+  const rosco = document.getElementById('rosco');
+  rosco.querySelectorAll('.letter, .dial-mark').forEach(node => node.remove());
+  ALPHABET.forEach((letter, index) => {
+    const mark = document.createElement('div');
+    mark.className = 'dial-mark';
+    mark.style.setProperty('--a', `${-90 + index * step}deg`);
+    rosco.appendChild(mark);
+
+    const chipEl = document.createElement('div');
+    chipEl.className = 'letter';
+    chipEl.dataset.letter = letter;
+    chipEl.style.setProperty('--a', `${-90 + index * step}deg`);
+    chipEl.textContent = letter;
+    rosco.appendChild(chipEl);
+  });
+}
+
+function render() {
+  document.querySelectorAll('.letter').forEach((node, index) => {
+    const status = state.statuses[node.dataset.letter] || 'pending';
+    node.className = `letter ${status === 'pending' ? '' : status}`;
+    if (index === state.current) node.classList.add('active');
+  });
+}
+
+function sync(nextState) {
+  if (!nextState || !nextState.statuses) return;
+  if ((nextState.version || 0) < lastVersion) return;
+  lastVersion = nextState.version || Date.now();
+  state = { ...defaultState(), ...nextState };
+  render();
+}
+
+if (channel) channel.addEventListener('message', event => sync(event.data));
+window.addEventListener('storage', event => {
+  if (event.key !== STORAGE_KEY || !event.newValue) return;
+  try { sync(JSON.parse(event.newValue)); } catch (err) {}
+});
+
+buildRosco();
+readState();
+render();
+setInterval(() => {
+  const before = lastVersion;
+  readState();
+  if ((state.version || 0) !== before) sync(state);
+}, 600);
+</script>
+</body>
+</html>

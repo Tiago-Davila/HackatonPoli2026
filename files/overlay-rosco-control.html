@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Control Rosco</title>
+<!--
+  CONTROL ROSCO
+  Panel para produccion. No hace falta ponerlo al aire.
+
+  Usar junto con:
+    overlay-rosco-display.html
+
+  Ambos archivos se sincronizan si se abren desde el mismo origen
+  (por ejemplo, el mismo servidor local o la misma carpeta en OBS).
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1920px; height:1080px;
+    overflow:hidden;
+    background:#060e1c;
+    font-family:'Libre Baskerville',serif;
+    color:#E8DCC8;
+  }
+  :root {
+    --bg:#060e1c;
+    --panel:#0a1525;
+    --panel2:#0d1a2b;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --muted:#B8A88A;
+    --green:#2EBC6F;
+    --red:#E14646;
+    --yellow:#F2C94C;
+  }
+  body::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 50% 70% at 12% 20%, rgba(196,160,85,.1), transparent 65%),
+      repeating-linear-gradient(90deg, transparent 0, transparent 59px, rgba(196,160,85,.035) 59px, rgba(196,160,85,.035) 60px);
+    pointer-events:none;
+  }
+  .shell {
+    position:absolute; inset:48px 70px;
+    display:grid;
+    grid-template-columns:520px 1fr;
+    gap:30px;
+  }
+  .panel {
+    position:relative;
+    background:rgba(10,21,37,.96);
+    border:1px solid rgba(196,160,85,.45);
+    box-shadow:0 0 22px rgba(0,0,0,.34), inset 0 0 16px rgba(196,160,85,.05);
+    padding:28px;
+  }
+  .panel::before, .panel::after {
+    content:''; position:absolute; width:24px; height:24px;
+    border-color:var(--gold); border-style:solid; opacity:.7;
+  }
+  .panel::before { top:10px; left:10px; border-width:2px 0 0 2px; }
+  .panel::after { right:10px; bottom:10px; border-width:0 2px 2px 0; }
+  .title {
+    font-family:'Playfair Display',serif;
+    font-size:44px; line-height:1;
+    color:var(--cream);
+    text-transform:uppercase;
+    text-shadow:0 0 18px rgba(196,160,85,.34);
+  }
+  .eyebrow {
+    margin-bottom:12px;
+    color:rgba(196,160,85,.76);
+    font-size:12px; letter-spacing:.32em;
+    text-transform:uppercase;
+  }
+  .stat-grid {
+    margin-top:34px;
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;
+  }
+  .stat {
+    border:1px solid rgba(196,160,85,.28);
+    background:rgba(6,14,28,.82);
+    padding:18px 12px;
+    text-align:center;
+  }
+  .stat-value {
+    font-family:'Playfair Display',serif;
+    font-size:60px; line-height:1; font-weight:900;
+  }
+  .stat.ok .stat-value { color:var(--green); }
+  .stat.pass .stat-value { color:var(--yellow); }
+  .stat.bad .stat-value { color:var(--red); }
+  .stat-label {
+    margin-top:6px;
+    font-size:10px; color:rgba(184,168,138,.75);
+    letter-spacing:.24em; text-transform:uppercase;
+  }
+  .preview {
+    position:relative;
+    margin-top:32px;
+    height:420px;
+  }
+  .preview .letter {
+    --chip:38px;
+    --radius:178px;
+    position:absolute; left:50%; top:50%;
+    width:var(--chip); height:var(--chip);
+    margin-left:calc(var(--chip) / -2);
+    margin-top:calc(var(--chip) / -2);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:#f6f7f4; color:#12151c;
+    border:1px solid rgba(255,255,255,.85);
+    font-family:'Libre Baskerville',serif; font-size:14px; font-weight:700;
+    transform:rotate(var(--a)) translate(var(--radius)) rotate(calc(-1 * var(--a)));
+  }
+  .preview .letter.active { box-shadow:0 0 16px rgba(255,255,255,.9); transform:rotate(var(--a)) translate(var(--radius)) rotate(calc(-1 * var(--a))) scale(1.12); }
+  .preview .letter.correct { background:var(--green); border-color:#7ff0a7; color:#061209; }
+  .preview .letter.passed { background:var(--yellow); border-color:#ffe695; color:#171206; }
+  .preview .letter.wrong { background:var(--red); border-color:#ff9a9a; color:#fff7f7; }
+  .current {
+    display:grid;
+    grid-template-columns:150px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  .big-letter {
+    height:150px;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid rgba(196,160,85,.5);
+    background:rgba(6,14,28,.78);
+    font-family:'Playfair Display',serif;
+    font-size:104px; font-weight:900; line-height:1;
+    color:var(--gold);
+  }
+  .question-title {
+    color:rgba(196,160,85,.76);
+    font-size:12px; letter-spacing:.28em; text-transform:uppercase;
+  }
+  .mode {
+    margin-top:14px;
+    color:var(--muted);
+    font-size:19px; letter-spacing:.18em; text-transform:uppercase;
+  }
+  .question {
+    margin-top:22px;
+    font-family:'Playfair Display',serif;
+    font-size:38px; line-height:1.22; color:var(--cream);
+  }
+  .answer {
+    margin-top:24px;
+    color:var(--muted);
+    font-size:18px;
+  }
+  .answer strong { color:var(--cream); font-size:24px; }
+  .actions {
+    margin-top:28px;
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;
+  }
+  .btn {
+    height:74px;
+    border-radius:3px;
+    border:1px solid rgba(196,160,85,.45);
+    background:rgba(196,160,85,.12);
+    color:var(--gold);
+    font-family:'Libre Baskerville',serif;
+    font-size:17px; font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase;
+    cursor:pointer;
+  }
+  .btn:hover { filter:brightness(1.18); }
+  .btn.ok { border-color:rgba(46,188,111,.75); background:rgba(46,188,111,.18); color:#8FF0BC; }
+  .btn.pass { border-color:rgba(242,201,76,.78); background:rgba(242,201,76,.18); color:#FFE08A; }
+  .btn.bad { border-color:rgba(225,70,70,.78); background:rgba(225,70,70,.16); color:#FF9C9C; }
+  .secondary-actions {
+    margin-top:14px;
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
+  }
+  .btn.small { height:44px; font-size:12px; color:rgba(232,220,200,.82); }
+  .editor {
+    margin-top:26px;
+    display:grid;
+    grid-template-columns:90px 1fr 1fr;
+    gap:10px;
+  }
+  .input, .select, .textarea {
+    background:#081120;
+    border:1px solid rgba(196,160,85,.38);
+    color:var(--cream);
+    border-radius:3px;
+    outline:none;
+    font-family:'Libre Baskerville',serif;
+    font-size:15px;
+    padding:10px 12px;
+  }
+  .textarea {
+    grid-column:1 / -1;
+    height:112px;
+    resize:none;
+    line-height:1.35;
+  }
+  .letter-grid {
+    margin-top:24px;
+    display:grid; grid-template-columns:repeat(14, 1fr); gap:7px;
+  }
+  .jump {
+    height:41px;
+    border-radius:3px;
+    border:1px solid rgba(196,160,85,.28);
+    background:rgba(6,14,28,.82);
+    color:var(--cream);
+    font-family:'Libre Baskerville',serif;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .jump.active { outline:2px solid var(--cream); outline-offset:1px; }
+  .jump.correct { background:rgba(46,188,111,.65); color:#061209; }
+  .jump.passed { background:rgba(242,201,76,.75); color:#171206; }
+  .jump.wrong { background:rgba(225,70,70,.7); color:#fff7f7; }
+  .hint {
+    margin-top:18px;
+    color:rgba(184,168,138,.62);
+    font-size:11px;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="panel">
+    <div class="eyebrow">Produccion</div>
+    <div class="title">Control Rosco</div>
+    <div class="stat-grid">
+      <div class="stat ok"><div class="stat-value" id="ok-count">0</div><div class="stat-label">Bien</div></div>
+      <div class="stat pass"><div class="stat-value" id="pass-count">0</div><div class="stat-label">Pasa</div></div>
+      <div class="stat bad"><div class="stat-value" id="bad-count">0</div><div class="stat-label">Mal</div></div>
+    </div>
+    <div class="preview" id="preview"></div>
+  </aside>
+
+  <main class="panel">
+    <section class="current">
+      <div class="big-letter" id="current-letter">A</div>
+      <div>
+        <div class="question-title">Pregunta activa</div>
+        <div class="mode" id="mode">Empieza con A</div>
+        <div class="question" id="question">Pregunta para la letra A.</div>
+        <div class="answer">Respuesta: <strong id="answer">-</strong></div>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button class="btn ok" id="btn-correct">Correcta</button>
+      <button class="btn pass" id="btn-pass">Pasar palabra</button>
+      <button class="btn bad" id="btn-wrong">Incorrecta</button>
+    </section>
+
+    <section class="secondary-actions">
+      <button class="btn small" id="btn-prev">Anterior</button>
+      <button class="btn small" id="btn-next">Siguiente</button>
+      <button class="btn small" id="btn-save">Guardar texto</button>
+      <button class="btn small" id="btn-reset">Reset</button>
+    </section>
+
+    <section class="editor">
+      <select class="select" id="letter-select"></select>
+      <input class="input" id="mode-input" type="text" spellcheck="false" placeholder="Empieza con A / Contiene A">
+      <input class="input" id="answer-input" type="text" spellcheck="false" placeholder="Respuesta esperada">
+      <textarea class="textarea" id="question-input" spellcheck="false" placeholder="Pregunta"></textarea>
+    </section>
+
+    <section class="letter-grid" id="letter-jump"></section>
+    <div class="hint">Atajos: 1 correcta - 2 pasar - 3 incorrecta - espacio siguiente - flechas cambian letra - Ctrl+S guarda texto</div>
+  </main>
+</div>
+
+<script>
+const p = new URLSearchParams(location.search);
+const ALPHABET = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','\u00D1','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const STORAGE_KEY = 'politon-rosco-live-state-v2';
+const CHANNEL_NAME = 'politon-rosco-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const defaultState = () => ({
+  version: Date.now(),
+  current: 0,
+  statuses: Object.fromEntries(ALPHABET.map(letter => [letter, 'pending'])),
+  questions: ALPHABET.map(letter => ({
+    letter,
+    mode: `Empieza con ${letter}`,
+    answer: '',
+    question: `Pregunta para la letra ${letter}.`
+  }))
+});
+
+let state = defaultState();
+
+const els = {
+  preview: document.getElementById('preview'),
+  jumps: document.getElementById('letter-jump'),
+  ok: document.getElementById('ok-count'),
+  pass: document.getElementById('pass-count'),
+  bad: document.getElementById('bad-count'),
+  currentLetter: document.getElementById('current-letter'),
+  mode: document.getElementById('mode'),
+  question: document.getElementById('question'),
+  answer: document.getElementById('answer'),
+  select: document.getElementById('letter-select'),
+  modeInput: document.getElementById('mode-input'),
+  answerInput: document.getElementById('answer-input'),
+  questionInput: document.getElementById('question-input')
+};
+
+function normalizeEntry(entry, fallbackLetter) {
+  const letter = String(entry.letter || fallbackLetter).toUpperCase();
+  return {
+    letter,
+    mode: entry.mode || `Empieza con ${letter}`,
+    answer: entry.answer || '',
+    question: entry.question || `Pregunta para la letra ${letter}.`
+  };
+}
+
+async function loadData() {
+  const dataUrl = p.get('data');
+  if (dataUrl) {
+    try {
+      const res = await fetch(dataUrl, { cache: 'no-store' });
+      const data = await res.json();
+      state.questions = ALPHABET.map(letter => {
+        const found = data.find(item => String(item.letter || '').toUpperCase() === letter);
+        return normalizeEntry(found || {}, letter);
+      });
+    } catch (err) {
+      console.warn('No se pudo cargar el JSON del rosco:', err);
+    }
+  }
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (saved && saved.statuses) {
+      state = { ...defaultState(), ...saved };
+    }
+  } catch (err) {
+    console.warn('No se pudo leer el estado del rosco:', err);
+  }
+}
+
+function publish() {
+  state.version = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (channel) channel.postMessage(state);
+}
+
+function build() {
+  const step = 360 / ALPHABET.length;
+  els.preview.innerHTML = '';
+  els.jumps.innerHTML = '';
+  els.select.innerHTML = '';
+
+  ALPHABET.forEach((letter, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'letter';
+    chip.dataset.letter = letter;
+    chip.style.setProperty('--a', `${-90 + index * step}deg`);
+    chip.textContent = letter;
+    els.preview.appendChild(chip);
+
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = letter;
+    els.select.appendChild(option);
+
+    const jump = document.createElement('button');
+    jump.className = 'jump';
+    jump.type = 'button';
+    jump.dataset.index = String(index);
+    jump.textContent = letter;
+    jump.addEventListener('click', () => setCurrent(index));
+    els.jumps.appendChild(jump);
+  });
+}
+
+function currentQuestion() {
+  return state.questions[state.current] || state.questions[0];
+}
+
+function setCurrent(index) {
+  state.current = (index + ALPHABET.length) % ALPHABET.length;
+  publish();
+  render();
+}
+
+function nextPlayable(from = state.current + 1) {
+  for (let offset = 0; offset < ALPHABET.length; offset++) {
+    const index = (from + offset) % ALPHABET.length;
+    const letter = ALPHABET[index];
+    if (state.statuses[letter] !== 'correct' && state.statuses[letter] !== 'wrong') return index;
+  }
+  return state.current;
+}
+
+function mark(status) {
+  const letter = ALPHABET[state.current];
+  state.statuses[letter] = status;
+  state.current = nextPlayable(state.current + 1);
+  publish();
+  render();
+}
+
+function saveCurrentText() {
+  const q = currentQuestion();
+  q.mode = els.modeInput.value.trim() || `Empieza con ${q.letter}`;
+  q.answer = els.answerInput.value.trim();
+  q.question = els.questionInput.value.trim() || `Pregunta para la letra ${q.letter}.`;
+  publish();
+  render();
+}
+
+function resetRosco() {
+  state.current = 0;
+  state.statuses = Object.fromEntries(ALPHABET.map(letter => [letter, 'pending']));
+  publish();
+  render();
+}
+
+function render() {
+  const q = currentQuestion();
+  const counts = { correct: 0, wrong: 0, passed: 0 };
+  ALPHABET.forEach(letter => {
+    const status = state.statuses[letter] || 'pending';
+    if (counts[status] !== undefined) counts[status]++;
+  });
+
+  els.ok.textContent = counts.correct;
+  els.pass.textContent = counts.passed;
+  els.bad.textContent = counts.wrong;
+  els.currentLetter.textContent = q.letter;
+  els.mode.textContent = q.mode;
+  els.question.textContent = q.question;
+  els.answer.textContent = q.answer || '-';
+  els.select.value = String(state.current);
+  els.modeInput.value = q.mode;
+  els.answerInput.value = q.answer;
+  els.questionInput.value = q.question;
+
+  document.querySelectorAll('.letter').forEach((node, index) => {
+    const status = state.statuses[node.dataset.letter] || 'pending';
+    node.className = `letter ${status === 'pending' ? '' : status}`;
+    if (index === state.current) node.classList.add('active');
+  });
+  document.querySelectorAll('.jump').forEach(node => {
+    const index = Number(node.dataset.index);
+    const letter = ALPHABET[index];
+    const status = state.statuses[letter] || 'pending';
+    node.className = `jump ${status === 'pending' ? '' : status}`;
+    if (index === state.current) node.classList.add('active');
+  });
+}
+
+document.getElementById('btn-correct').addEventListener('click', () => mark('correct'));
+document.getElementById('btn-pass').addEventListener('click', () => mark('passed'));
+document.getElementById('btn-wrong').addEventListener('click', () => mark('wrong'));
+document.getElementById('btn-prev').addEventListener('click', () => setCurrent(state.current - 1));
+document.getElementById('btn-next').addEventListener('click', () => setCurrent(nextPlayable()));
+document.getElementById('btn-save').addEventListener('click', saveCurrentText);
+document.getElementById('btn-reset').addEventListener('click', resetRosco);
+els.select.addEventListener('change', () => setCurrent(Number(els.select.value)));
+
+document.addEventListener('keydown', event => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') {
+    if (event.code === 'KeyS' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      saveCurrentText();
+    }
+    return;
+  }
+  if (event.code === 'Digit1') mark('correct');
+  if (event.code === 'Digit2') mark('passed');
+  if (event.code === 'Digit3') mark('wrong');
+  if (event.code === 'Space') { event.preventDefault(); setCurrent(nextPlayable()); }
+  if (event.code === 'ArrowRight') setCurrent(state.current + 1);
+  if (event.code === 'ArrowLeft') setCurrent(state.current - 1);
+});
+
+loadData().then(() => {
+  build();
+  publish();
+  render();
+});
+</script>
+</body>
+</html>

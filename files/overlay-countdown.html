@@ -100,14 +100,19 @@
   /* Finished state — digits turn red */
   .widget.finished .time-value { color:#e03030; }
 
-  /* ── Control panel ── */
+  /* ── Control panel (hidden, appears on hover in OBS Interact) ── */
   .controls {
     position:absolute; bottom:0; left:0; right:0;
     height:56px;
-    background:rgba(6,14,28,.92);
+    background:rgba(6,14,28,.95);
     border-top:1px solid rgba(196,160,85,.25);
     display:flex; align-items:center; justify-content:center;
     gap:6px; padding:0 10px; z-index:10;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+  }
+  .widget:hover .controls {
+    transform:translateY(0);
   }
 
   .ctrl-input {

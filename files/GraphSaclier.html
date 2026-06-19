@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-<title>Politón — Lower Third</title>
+<title>Politón — Lower Third — Lucas Saclier</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -64,45 +64,16 @@
     pointer-events: none;
   }
   .lt-name {
-    font-family: 'Playfair Display', serif; font-size:48px; font-weight:700;
-    color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.8); line-height:1.1; white-space:nowrap;
+    font-family: 'Libre Baskerville', serif; font-size:22px; font-weight:400;
+    color:rgba(196,160,85,.95); text-shadow:0 2px 8px rgba(0,0,0,.8); line-height:1.2; white-space:nowrap;
+    margin-top:5px;
+  }
+  .lt-title {
+    font-family: 'Playfair Display', serif; font-size:40px; font-weight:700;
+    color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.8); line-height:1.15; white-space:nowrap;
   }
 
-  .controls {
-    position: absolute; bottom:0; left:0; right:0;
-    height: 100px;
-    background: rgba(6,14,28,.95);
-    border-top: 2px solid rgba(196,160,85,.4);
-    display: flex; align-items:center; justify-content:center;
-    gap: 20px; padding: 0 40px; z-index: 10;
-    transform: translateY(100%);
-    transition: transform .25s ease;
-  }
-  .lower-third:hover .controls {
-    transform: translateY(0);
-  }
 
-  .ctrl-label {
-    font-family: 'Libre Baskerville', serif;
-    font-size:16px; color:rgba(196,160,85,.7);
-    letter-spacing:.2em; text-transform:uppercase; margin-bottom:6px;
-  }
-  .ctrl-input {
-    background: #0a1525; border:2px solid rgba(196,160,85,.4); border-radius:4px;
-    color: #E8DCC8; font-family:'Libre Baskerville',serif; font-size:26px;
-    padding: 10px 14px; outline:none; letter-spacing:.03em; width:480px;
-  }
-  .ctrl-input:focus { border-color:#C4A055; box-shadow:0 0 10px rgba(196,160,85,.3); }
-  .ctrl-input::placeholder { color:rgba(184,168,138,.35); font-size:22px; }
-
-  .ctrl-btn {
-    background: rgba(196,160,85,.12); border:2px solid rgba(196,160,85,.4); border-radius:4px;
-    color: #C4A055; font-size:22px; font-weight:700; cursor:pointer;
-    padding: 12px 30px; letter-spacing:.06em; text-transform:uppercase;
-    transition: background .15s; margin-top:28px;
-  }
-  .ctrl-btn:hover  { background:rgba(196,160,85,.28); }
-  .ctrl-btn:active { background:rgba(196,160,85,.45); }
 </style>
 </head>
 <body>
@@ -119,33 +90,21 @@
   <div class="dot"></div>
 
   <div class="lt-text">
-    <div class="lt-name" id="lt-name">Nombre del Invitado</div>
+    <div class="lt-title" id="lt-title">IA, Empleo y Profesiones del Futuro</div>
+    <div class="lt-name" id="lt-name">Lucas Saclier</div>
   </div>
 
-  <div class="controls">
-    <div>
-      <div class="ctrl-label">Nombre</div>
-      <input class="ctrl-input" id="inp-nombre" type="text" placeholder="Nombre del invitado..." spellcheck="false" autocomplete="off">
-    </div>
-    <button class="ctrl-btn" id="btn-aplicar">Aplicar</button>
-  </div>
+
 </div>
 
 <script>
   const p = new URLSearchParams(location.search);
 
-  const nombreInicial = p.get('nombre') || 'Nombre del Invitado';
-  document.getElementById('lt-name').textContent = nombreInicial;
-  document.getElementById('inp-nombre').value    = nombreInicial;
+  const nombreInicial = p.get('nombre') || 'Lucas Saclier';
+  const tituloInicial = p.get('titulo') || 'IA, Empleo y Profesiones del Futuro';
 
-  function aplicar() {
-    document.getElementById('lt-name').textContent = document.getElementById('inp-nombre').value.trim();
-  }
-
-  document.getElementById('btn-aplicar').addEventListener('click', aplicar);
-  document.getElementById('inp-nombre').addEventListener('keydown', e => {
-    if (e.key === 'Enter') aplicar();
-  });
+  document.getElementById('lt-name').textContent  = nombreInicial;
+  document.getElementById('lt-title').textContent = tituloInicial;
 
   const accent = '#' + (p.get('accent') || 'C4A055');
   document.getElementById('accent-bar').style.background = `linear-gradient(to bottom, ${accent}, ${accent}4d)`;

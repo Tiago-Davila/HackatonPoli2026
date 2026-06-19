@@ -15,10 +15,40 @@
   .mosca-l { top:70px; left:70px; }
   .mosca-r { top:70px; right:70px; }
   .mosca img { height:60px; width:auto; }
+
+  .mosca-r { position:absolute; }
+  .mosca-r img {
+    position:absolute; top:0; right:0;
+    height:60px; width:auto;
+    transition: opacity .6s ease;
+  }
+  .mosca-r #img-numero { height:120px; top:-20px; }
+  .mosca-r img.hidden { opacity:0; }
+  .mosca-r img.visible { opacity:1; }
 </style>
 </head>
 <body>
 <div class="mosca mosca-l"><img src="LogoCompleto.png" alt="Politon 2026"></div>
-<div class="mosca mosca-r"><img src="logo_IPM_cartoon.png" alt="IPM"></div>
+<div class="mosca mosca-r">
+  <img id="img-ipm"    src="logo_IPM_cartoon.png" alt="IPM"    class="visible">
+  <img id="img-numero" src="Numero.png"            alt="Numero" class="hidden">
+</div>
+
+<script>
+  const ipm    = document.getElementById('img-ipm');
+  const numero = document.getElementById('img-numero');
+  let showingIPM = true;
+
+  setInterval(() => {
+    if (showingIPM) {
+      ipm.classList.replace('visible','hidden');
+      numero.classList.replace('hidden','visible');
+    } else {
+      numero.classList.replace('visible','hidden');
+      ipm.classList.replace('hidden','visible');
+    }
+    showingIPM = !showingIPM;
+  }, 5000);
+</script>
 </body>
 </html>
